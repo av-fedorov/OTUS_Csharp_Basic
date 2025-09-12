@@ -7,6 +7,8 @@ class Program
         string command;
         string name = "";
         List<string> todoList = new List<string>();
+        int taskNumber; 
+        bool exitRemoveFlag  = false;
 
         Console.WriteLine("Добро пожаловать в консольного бота :) \n");
         Console.WriteLine("Список доступных команд:");
@@ -37,14 +39,14 @@ class Program
                     Console.WriteLine(" /help       - вывод описания по доступным командам.");
                     Console.WriteLine(" /info       - техническая информация о программе.");
                     Console.WriteLine(" /echo       - выводит в консоль текст, введенный после команд /echo. " +
-                                                      "Например: /echo Hello World!");
+                                      "Например: /echo Hello World!");
                     Console.WriteLine(" /addtask    - добавить задачу в список дел.");
                     Console.WriteLine(" /showtasks  - отобразить задачи из списка дел.");
                     Console.WriteLine(" /removetask - удалить задачу из списка дел.");
                     Console.WriteLine(" /exit       - выход из программы.");
                     break;
                 case "/info":
-                    Console.WriteLine("Версия программы: 0.1, дата создания: 19.08.2025.");
+                    Console.WriteLine("Версия программы: 0.2, дата создания: 09.09.2025.");
                     break;
                 case string cmd when cmd.IndexOf("/echo") >= 0:
                     if (!string.IsNullOrEmpty(name) || !string.IsNullOrWhiteSpace(name))
@@ -56,34 +58,39 @@ class Program
                         Console.WriteLine("Команда /echo не доступна, т.к. не задано имя пользователя. "
                                           + "Задайте имя используя команду /start.");
                     }
+
                     break;
                 case "/addtask":
                     Console.WriteLine("Введите описание задачи: ");
                     todoList.Add(Console.ReadLine());
-                    Console.WriteLine("Задача добавлена.");
+                    Console.WriteLine("\nЗадача добавлена.");
                     break;
                 case "/showtasks":
                     ListTasks(todoList);
                     break;
                 case "/removetask":
-                    ListTasks(todoList);
-
-                    if (todoList.Count > 0)
+                    if (todoList.Count == 0)
+                        Console.WriteLine("Список задач пуст.");
+                    else
                     {
-                        Console.Write("Выберите номер задачи для удаления: ");
-                    
-                        int taskNumber = Convert.ToInt32(Console.ReadLine());   
-                        // планирую добавить exception после соответствующего урока :)
-                    
-                        if (taskNumber > 0 && taskNumber <= todoList.Count)
+                        do
                         {
-                            todoList.RemoveAt(taskNumber - 1);
-                            Console.WriteLine($"Задача #{taskNumber} удалена.");    
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Задача #{taskNumber} отсутствует в списке.");
-                        }
+                            ListTasks(todoList);
+                            Console.Write("\nВыберите номер задачи для удаления: ");
+                            int.TryParse(Console.ReadLine(), out taskNumber);
+
+                            if (taskNumber > 0 && taskNumber <= todoList.Count)
+                            {
+                                todoList.RemoveAt(taskNumber - 1);
+                                Console.WriteLine($"Задача #{taskNumber} удалена.");
+                                exitRemoveFlag = true;
+                            }
+                            else
+                            {
+                                Console.WriteLine($"\nЗадача c выбранным номером отсутствует в списке." +
+                                                  "\nВведите корректный номер задачи.\n");
+                            }
+                        } while ((taskNumber <= 0 || taskNumber > todoList.Count) && todoList.Count > 0 && !exitRemoveFlag);
                     }
                     break;
             }
@@ -91,15 +98,17 @@ class Program
 
         Console.WriteLine("Программа завершена, до свидания.");
     }
-    
+
     public static void ListTasks(List<string> todoList)
     {
         if (todoList.Count == 0)
             Console.WriteLine("Список задач пуст.");
         else
         {
+            Console.WriteLine("Cписок текущих задач: ");
+            
             for (int i = 0; i < todoList.Count; i++)
-                Console.WriteLine($"{i + 1}. {todoList[i]}");    
+                Console.WriteLine($"{i + 1}. {todoList[i]}");
         }
     }
 }
