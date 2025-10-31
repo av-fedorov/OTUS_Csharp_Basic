@@ -110,9 +110,9 @@ class Program
         {
             Console.WriteLine("Введите описание задачи: ");
             taskText = Console.ReadLine();
-            todoList.Add(taskText);
         }
         
+        todoList.Add(taskText);
         Console.WriteLine("\nЗадача добавлена.");
     }
 
