@@ -4,7 +4,7 @@ namespace Homework;
 
 class Program
 {
-    private static string versionText = "Версия программы: 0.2.1, дата создания: 09.09.2025.";
+    private static string versionText = "Версия программы: 02.13.01, дата создания: 31.10.2025.";
     private static List<string> todoList = new List<string>();
     private static string command;
     private static string name = "";
