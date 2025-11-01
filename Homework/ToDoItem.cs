@@ -12,7 +12,7 @@ public class ToDoItem
     public string Name { get; }
     public DateTime CreatedAt { get; }
     public ToDoItemState State { get; set; }
-    public DateTime? StateChangedAt { get; }
+    public DateTime? StateChangedAt { get; set; }
 
     public ToDoItem(ToDoUser user, string name)
     {

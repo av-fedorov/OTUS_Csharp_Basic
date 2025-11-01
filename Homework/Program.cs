@@ -2,7 +2,7 @@
 
 class Program
 {
-    private static string versionText = "Версия программы: 02.13.01, дата создания: 31.10.2025.";
+    private static string versionText = "Версия программы: 02.13.02, дата создания: 01.11.2025.";
     private static List<ToDoItem> todoList = new List<ToDoItem>();
     private static ToDoUser User = new ToDoUser(null);
     private static string command;
@@ -13,7 +13,6 @@ class Program
         Console.WriteLine("Список доступных команд:");
         Console.WriteLine(" /start \n /help \n /info \n " +
                           "/addtask \n /showtasks \n /showalltasks \n /completetask \n " +
-                          // "/removetask \n /echo \n " +
                           "/exit");
 
         do
@@ -45,14 +44,8 @@ class Program
                     ShowTasks("Active");
                     break;
                 case "/showalltasks":
-                    ShowTasks();
+                    ShowTasks("All");
                     break;
-                // case "/removetask":
-                //     RemoveTask();
-                //     break;
-                // case string cmd when cmd.StartsWith("/echo"):
-                //     // Echo(cmd, name);
-                //     break;
             }
         } while (command != "/exit");
 
@@ -85,9 +78,6 @@ class Program
         Console.WriteLine(" /showalltasks   - отобразить задачи только в статусе 'Active'.");
         Console.WriteLine(" /addtask        - добавить задачу в список дел.");
         Console.WriteLine(" /completetask   - завершить выбранную задачу.");
-        // Console.WriteLine(" /removetask     - удалить задачу из списка дел.");
-        // Console.WriteLine(" /echo           - выводит в консоль текст, введенный после команд /echo. " +
-                          // "Например: /echo Hello World!");
         Console.WriteLine(" /exit           - выход из программы.");
     }
     
@@ -103,22 +93,25 @@ class Program
         {
             Console.WriteLine("Cписок текущих задач: ");
 
-            for (int i = 0; i < todoList.Count && todoList[i].State == ToDoItem.ToDoItemState.Active; i++)
+            for (int i = 0; i < todoList.Count; i++)
             {
-                Console.WriteLine($"#{i + 1}. {todoList[i].CreatedAt} [{todoList[i].Id}] " +
-                                  $"\nCтатус: {todoList[i].State}" +
-                                  $"\nТекст: {todoList[i].Name}\n");
-                taskCount++;
+                if (todoList[i].State == ToDoItem.ToDoItemState.Active)
+                {
+                    Console.WriteLine($"#{i + 1}. {todoList[i].CreatedAt} [{todoList[i].Id}] " +
+                                      $"\nТекст: {todoList[i].Name}\n");
+                    
+                    taskCount++;
+                }
             }
         }
-        else
+        else if (mode == "All")
         {
             Console.WriteLine("Cписок текущих задач: ");
 
             for (int i = 0; i < todoList.Count; i++)
             {
                 Console.WriteLine($"#{i + 1}. {todoList[i].CreatedAt} [{todoList[i].Id}] " +
-                                  $"\nCтатус: {todoList[i].State}" +
+                                  $"\nCтатус: [{todoList[i].State}], изменен: {todoList[i].StateChangedAt}" +
                                   $"\nТекст: {todoList[i].Name}\n");
                 taskCount++;
             }
@@ -150,58 +143,15 @@ class Program
             Console.Write("\nВведите Id задачи для завершения: ");
             taskId = Console.ReadLine();
 
-            for (int i = 0; i < todoList.Count && todoList[i].State == ToDoItem.ToDoItemState.Active; i++)
+            for (int i = 0; i < todoList.Count; i++)
             {
-                if (todoList[i].Id.ToString() == taskId)
+                if (todoList[i].Id.ToString() == taskId && todoList[i].State == ToDoItem.ToDoItemState.Active)
                 {
                     todoList[i].State = ToDoItem.ToDoItemState.Completed;
+                    todoList[i].StateChangedAt = DateTime.Now;
                     Console.WriteLine($"Задача с идентификатором [{todoList[i].Id.ToString()}] завершена." );
                 }
             }
         }
     }
-    
-    /*
-    public static void RemoveTask()
-    {
-        if (ShowTasks())
-        {
-            int taskNumber;
-            bool exitRemoveFlag = false;
-
-            do
-            {
-                Console.Write("\nВыберите номер задачи для удаления: ");
-                int.TryParse(Console.ReadLine(), out taskNumber);
-
-                if (taskNumber > 0 && taskNumber <= todoList.Count)
-                {
-                    todoList.RemoveAt(taskNumber - 1);
-                    Console.WriteLine($"Задача #{taskNumber} удалена.");
-                    exitRemoveFlag = true;
-                }
-                else
-                {
-                    Console.WriteLine($"\nЗадача c выбранным номером отсутствует в списке." +
-                                      "\nВведите корректный номер задачи.\n");
-                }
-            } while ((taskNumber <= 0 || taskNumber > todoList.Count) && todoList.Count > 0 && !exitRemoveFlag);
-        }
-    }
-    */
-    
-    /*
-     public static void Echo(String cmd, String name)
-    {
-        if (!string.IsNullOrEmpty(name) || !string.IsNullOrWhiteSpace(name))
-        {
-            Console.WriteLine(cmd.Substring("/echo".Length).Trim());
-        }
-        else
-        {
-            Console.WriteLine("Команда /echo не доступна, т.к. не задано имя пользователя. "
-                              + "Задайте имя используя команду /start.");
-        }
-    }
-    */
 }
