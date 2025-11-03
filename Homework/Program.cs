@@ -1,20 +1,20 @@
-﻿using System.Runtime.InteropServices.JavaScript;
-
-namespace Homework;
+﻿namespace Homework;
 
 class Program
 {
-    private static string versionText = "Версия программы: 0.2.1, дата создания: 09.09.2025.";
-    private static List<string> todoList = new List<string>();
+    private static string versionText = "Версия программы: 02.13.02, дата создания: 01.11.2025.";
+    private static List<ToDoItem> todoList = new List<ToDoItem>();
+    private static ToDoUser User = new ToDoUser(null);
     private static string command;
-    private static string name = "";
-    
+
     static void Main()
     {
         Console.WriteLine("Добро пожаловать в консольного бота :) \n");
         Console.WriteLine("Список доступных команд:");
-        Console.WriteLine(" /start \n /help \n /info \n /echo \n" +
-                          " /addtask \n /showtasks \n /removetask \n /exit");
+        Console.WriteLine(" /start \n /help \n /info \n " +
+                          "/addtask \n /showtasks \n /showalltasks \n /completetask \n " +
+                          "/exit");
+
         do
         {
             Console.WriteLine("\n---------------------------");
@@ -23,15 +23,10 @@ class Program
 
             Console.WriteLine("\nВы ввели: " + command + "\n");
 
-            if (!string.IsNullOrEmpty(name) || !string.IsNullOrWhiteSpace(name))
-            {
-                Console.WriteLine("\nЗдравствуйте " + name + ".");
-            }
-
             switch (command)
             {
                 case "/start":
-                    name = StartApp();
+                    StartApp();
                     break;
                 case "/help":
                     ShowHelp();
@@ -39,17 +34,17 @@ class Program
                 case "/info":
                     ShowInfo();
                     break;
-                case string cmd when cmd.StartsWith("/echo"):
-                    Echo(cmd, name);
-                    break;
                 case "/addtask":
                     AddTask();
+                    break; 
+                case "/completetask":
+                    CompleteTask();
                     break;
                 case "/showtasks":
-                    ShowTasks();
+                    ShowTasks("Active");
                     break;
-                case "/removetask":
-                    RemoveTask();
+                case "/showalltasks":
+                    ShowTasks("All");
                     break;
             }
         } while (command != "/exit");
@@ -57,103 +52,106 @@ class Program
         Console.WriteLine("Программа завершена, до свидания.");
     }
 
-    public static String StartApp()
+    public static void StartApp()
     {
-        while (string.IsNullOrWhiteSpace(name))
+        do
         {
             Console.Write("Введите свое имя: ");
-            name = Console.ReadLine();
-        }
+            User.TelegramUserName = Console.ReadLine();
+        } while (string.IsNullOrWhiteSpace(User.TelegramUserName));
 
-        return name;
+        Console.WriteLine($"Здравствуйте {User.TelegramUserName}.");
     }
-    
+
     public static void ShowInfo()
     {
         Console.WriteLine(versionText);
     }
-    
+
     public static void ShowHelp()
     {
         Console.WriteLine("Список доступных команд:");
-        Console.WriteLine(" /start      - начало работы с программой.");
-        Console.WriteLine(" /help       - вывод описания по доступным командам.");
-        Console.WriteLine(" /info       - техническая информация о программе.");
-        Console.WriteLine(" /echo       - выводит в консоль текст, введенный после команд /echo. " +
-                          "Например: /echo Hello World!");
-        Console.WriteLine(" /addtask    - добавить задачу в список дел.");
-        Console.WriteLine(" /showtasks  - отобразить задачи из списка дел.");
-        Console.WriteLine(" /removetask - удалить задачу из списка дел.");
-        Console.WriteLine(" /exit       - выход из программы.");
+        Console.WriteLine(" /start          - начало работы с программой.");
+        Console.WriteLine(" /help           - вывод описания по доступным командам.");
+        Console.WriteLine(" /info           - техническая информация о программе.");
+        Console.WriteLine(" /showtasks      - отобразить все задачи из списка дел.");
+        Console.WriteLine(" /showalltasks   - отобразить задачи только в статусе 'Active'.");
+        Console.WriteLine(" /addtask        - добавить задачу в список дел.");
+        Console.WriteLine(" /completetask   - завершить выбранную задачу.");
+        Console.WriteLine(" /exit           - выход из программы.");
     }
     
-    public static bool ShowTasks()
+    public static bool ShowTasks(string mode = "all")
     {
+        int taskCount = 0;
+
         if (todoList.Count == 0)
+        {
             Console.WriteLine("Список задач пуст.");
-        else
+        }
+        else if (mode == "Active")
         {
             Console.WriteLine("Cписок текущих задач: ");
-            
+
             for (int i = 0; i < todoList.Count; i++)
-                Console.WriteLine($"{i + 1}. {todoList[i]}");
+            {
+                if (todoList[i].State == ToDoItem.ToDoItemState.Active)
+                {
+                    Console.WriteLine($"#{i + 1}. {todoList[i].CreatedAt} [{todoList[i].Id}] " +
+                                      $"\nТекст: {todoList[i].Name}\n");
+                    
+                    taskCount++;
+                }
+            }
         }
-        
-        return todoList.Count > 0;
+        else if (mode == "All")
+        {
+            Console.WriteLine("Cписок текущих задач: ");
+
+            for (int i = 0; i < todoList.Count; i++)
+            {
+                Console.WriteLine($"#{i + 1}. {todoList[i].CreatedAt} [{todoList[i].Id}] " +
+                                  $"\nCтатус: [{todoList[i].State}], изменен: {todoList[i].StateChangedAt}" +
+                                  $"\nТекст: {todoList[i].Name}\n");
+                taskCount++;
+            }
+        }
+
+        return taskCount > 0;
     }
-    
+
     public static void AddTask()
     {
         string taskText = "";
 
-        while (string.IsNullOrWhiteSpace(taskText))
+        do
         {
             Console.WriteLine("Введите описание задачи: ");
             taskText = Console.ReadLine();
-        }
-        
-        todoList.Add(taskText);
+        } while (string.IsNullOrWhiteSpace(taskText));
+
+        todoList.Add(new ToDoItem(User, taskText));
         Console.WriteLine("\nЗадача добавлена.");
     }
 
-    public static void RemoveTask()
+    public static void CompleteTask()
     {
-        if (ShowTasks())
-        {
-            int taskNumber;
-            bool exitRemoveFlag = false;
-            
-            do
-            {
-                Console.Write("\nВыберите номер задачи для удаления: ");
-                int.TryParse(Console.ReadLine(), out taskNumber);
+        string taskId = "";
         
-                if (taskNumber > 0 && taskNumber <= todoList.Count)
-                {
-                    todoList.RemoveAt(taskNumber - 1);
-                    Console.WriteLine($"Задача #{taskNumber} удалена.");
-                    exitRemoveFlag = true;
-                }
-                else
-                {
-                    Console.WriteLine($"\nЗадача c выбранным номером отсутствует в списке." +
-                                      "\nВведите корректный номер задачи.\n");
-                }
-            } while ((taskNumber <= 0 || taskNumber > todoList.Count) && todoList.Count > 0 && !exitRemoveFlag);
-        }
-    }
-    
-    public static void Echo(String cmd, String name)
-    {
-        if (!string.IsNullOrEmpty(name) || !string.IsNullOrWhiteSpace(name))
+        if (ShowTasks("Active"))
         {
-            Console.WriteLine(cmd.Substring("/echo".Length).Trim());
-        }
-        else
-        {
-            Console.WriteLine("Команда /echo не доступна, т.к. не задано имя пользователя. "
-                              + "Задайте имя используя команду /start.");
-        }
+            Console.Write("\nВведите Id задачи для завершения: ");
+            taskId = Console.ReadLine();
 
+            for (int i = 0; i < todoList.Count; i++)
+            {
+                if (todoList[i].Id.ToString() == taskId && todoList[i].State == ToDoItem.ToDoItemState.Active)
+                {
+                    todoList[i].State = ToDoItem.ToDoItemState.Completed;
+                    todoList[i].StateChangedAt = DateTime.Now;
+                    Console.WriteLine($"Задача с идентификатором [{todoList[i].Id.ToString()}] завершена." );
+                }
+            }
+        }
     }
 }
