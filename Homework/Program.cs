@@ -2,7 +2,8 @@
 
 class Program
 {
-    private static string versionText = "Версия программы: 02.13.02, дата создания: 01.11.2025.";
+    // Домашнее задание №16: Интерфейсы
+    private static string versionText = "Версия программы: 02.16.01, дата создания: 18.11.2025.";
     private static List<ToDoItem> todoList = new List<ToDoItem>();
     private static ToDoUser User = new ToDoUser(null);
     private static string command;
