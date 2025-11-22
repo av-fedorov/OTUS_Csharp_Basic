@@ -2,7 +2,7 @@
 
 class Program
 {
-    private static string versionText = "Версия программы: 02.11.01, дата создания: 02.11.2025.";
+    private static string versionText = "Версия программы: 02.11.02, дата изменения: 22.11.2025.";
     private static List<ToDoItem> todoList = new List<ToDoItem>();
     private static ToDoUser User = new ToDoUser(null);
     private static string command;
@@ -21,52 +21,19 @@ class Program
 
             do
             {
-                Console.WriteLine("\n---------------------------");
-                Console.Write("Введите название команды: ");
-                command = Console.ReadLine();
-
-                Console.WriteLine("\nВы ввели: " + command + "\n");
-
-                switch (command)
+                try
                 {
-                    case "/start":
-                        StartApp();
-                        break;
-                    case "/help":
-                        ShowHelp();
-                        break;
-                    case "/info":
-                        ShowInfo();
-                        break;
-                    case "/addtask":
-                        AddTask();
-                        break;
-                    case "/completetask":
-                        CompleteTask();
-                        break;
-                    case "/showtasks":
-                        ShowTasks("Active");
-                        break;
-                    case "/showalltasks":
-                        ShowTasks("All");
-                        break;
+                    RunApp();
                 }
-            } while (command != "/exit");
+                catch (TaskCountLimitException) {}
+                catch (TaskLengthLimitException) {}
+                catch (DuplicateTaskException) {}
+                catch (ArgumentException e) { Console.WriteLine(e.Message); }
+            } 
+            while (command != "/exit");
 
             Console.WriteLine("Программа завершена, до свидания.");
         }
-
-        catch (TaskCountLimitException) {}
-
-        catch (TaskLengthLimitException) {}
-        
-        catch (DuplicateTaskException) {}
-
-        catch (ArgumentException e)
-        {
-            Console.WriteLine(e.Message);
-        }
-
         catch (Exception e)
         {
             Console.WriteLine($"Произошла непредвиденная ошибка: " +
@@ -74,6 +41,39 @@ class Program
         }
     }
 
+    public static void RunApp()
+    {
+        Console.WriteLine("\n---------------------------");
+        Console.Write("Введите название команды: ");
+        command = Console.ReadLine();
+
+        Console.WriteLine("\nВы ввели: " + command + "\n");
+
+        switch (command)
+        {
+            case "/start":
+                StartApp();
+                break;
+            case "/help":
+                ShowHelp();
+                break;
+            case "/info":
+                ShowInfo();
+                break;
+            case "/addtask":
+                AddTask();
+                break;
+            case "/completetask":
+                CompleteTask();
+                break;
+            case "/showtasks":
+                ShowTasks("Active");
+                break;
+            case "/showalltasks":
+                ShowTasks("All");
+                break;
+        }
+    }
     public static void StartApp()
     {
         Console.Write("Введите максимально допустимое количество задач (от 1 до 100): ");
