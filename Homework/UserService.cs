@@ -6,7 +6,7 @@ public class UserService : IUserService
 {
     public ToDoUser RegisterUser(long telegramUserId, string telegramUserName)
     {
-        ToDoUser User = new(telegramUserName, telegramUserId);
+        ToDoUser User = new ToDoUser(telegramUserName, telegramUserId);
         return User;
     }
 
