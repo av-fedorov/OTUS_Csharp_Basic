@@ -2,6 +2,7 @@ namespace Homework;
 
 public class ToDoService : IToDoService
 {
+    private static List<ToDoItem> todoList = new List<ToDoItem>();
     public IReadOnlyList<ToDoItem> GetAllByUserId(Guid userId)
     {
         throw new NotImplementedException();
@@ -14,18 +15,7 @@ public class ToDoService : IToDoService
 
     public ToDoItem Add(ToDoUser user, string name)
     {
-        string taskText = "";
-
-        do
-        {
-            botClient.SendMessage(update.Message.Chat, "Введите описание задачи: ");
-            taskText = Console.ReadLine();
-        } while (string.IsNullOrWhiteSpace(taskText));
-
-        todoList.Add(new ToDoItem(User, taskText));
-        botClient.SendMessage(update.Message.Chat, "\nЗадача добавлена.");
-        
-        // throw new NotImplementedException();
+        todoList.Add(new ToDoItem(user, name)); 
     }
 
     public void MarkCompleted(Guid id)

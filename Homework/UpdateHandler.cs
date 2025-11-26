@@ -7,9 +7,10 @@ namespace Homework;
 public class UpdateHandler : IUpdateHandler
 {
     private static string versionText = "Версия программы: 02.16.01, дата создания: 18.11.2025.";
-    private static List<ToDoItem> todoList = new List<ToDoItem>();
+    // private static List<ToDoItem> todoList = new List<ToDoItem>();
     private static string command;
     private static ToDoUser User = null;
+    private static ToDoService TaskService = new ToDoService();
 
     public void HandleUpdateAsync(ITelegramBotClient botClient, Update update)
     {
@@ -29,13 +30,13 @@ public class UpdateHandler : IUpdateHandler
             case "/addtask":
                 if (CanRunCmd()) AddTask();
                 break;
-            case "/completetask":
+            // case "/completetask":
                 if (CanRunCmd()) CompleteTask();
                 break;
-            case "/showtasks":
+            // case "/showtasks":
                 if (CanRunCmd()) ShowTasks("Active");
                 break;
-            case "/showalltasks":
+            // case "/showalltasks":
                 if (CanRunCmd()) ShowTasks("All");
                 break;
         }
@@ -113,16 +114,16 @@ public class UpdateHandler : IUpdateHandler
 
         void AddTask()
         {
-            // string taskText = "";
-            //
-            // do
-            // {
-            //     botClient.SendMessage(update.Message.Chat, "Введите описание задачи: ");
-            //     taskText = Console.ReadLine();
-            // } while (string.IsNullOrWhiteSpace(taskText));
-            //
-            // todoList.Add(new ToDoItem(User, taskText));
-            // botClient.SendMessage(update.Message.Chat, "\nЗадача добавлена.");
+            string taskText = "";
+            
+            do
+            {
+                botClient.SendMessage(update.Message.Chat, "Введите описание задачи: ");
+                taskText = Console.ReadLine();
+            } while (string.IsNullOrWhiteSpace(taskText));
+            
+            TaskService.Add(User, taskText);
+            botClient.SendMessage(update.Message.Chat, "\nЗадача добавлена.");
         }
 
         void CompleteTask()
