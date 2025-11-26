@@ -2,7 +2,7 @@
 
 class Program
 {
-    private static string versionText = "Версия программы: 02.11.02, дата изменения: 22.11.2025.";
+    private static string versionText = "Версия программы: 02.11.03, дата изменения: 26.11.2025.";
     private static List<ToDoItem> todoList = new List<ToDoItem>();
     private static ToDoUser User = new ToDoUser(null);
     private static string command;
@@ -25,9 +25,9 @@ class Program
                 {
                     RunApp();
                 }
-                catch (TaskCountLimitException) {}
-                catch (TaskLengthLimitException) {}
-                catch (DuplicateTaskException) {}
+                catch (TaskCountLimitException e) {Console.WriteLine(e.Message);}
+                catch (TaskLengthLimitException e) {Console.WriteLine(e.Message);}
+                catch (DuplicateTaskException e) {Console.WriteLine(e.Message);}
                 catch (ArgumentException e) { Console.WriteLine(e.Message); }
             } 
             while (command != "/exit");
@@ -155,7 +155,7 @@ class Program
 
     public static void AddTask()
     {
-        if (todoList.Count > taskCountLimit && taskCountLimit > 0) 
+        if (todoList.Count >= taskCountLimit && taskCountLimit > 0) 
             throw new TaskCountLimitException(taskCountLimit);
         
         string taskText = "";
@@ -216,5 +216,22 @@ class Program
     {
         if (string.IsNullOrEmpty(str) || string.IsNullOrWhiteSpace(str)) 
             throw new ArgumentException("Введенное значение не должно быть равно null, пустой строке или пробелу.");
+    }
+    
+    public class TaskLengthLimitException : Exception
+    {
+        public TaskLengthLimitException(int taskLength, int taskLengthLimit) 
+            : base($"Длина задачи ({taskLength}) превышает максимально допустимое значение {taskLengthLimit}.") { }
+    }
+    
+    public class DuplicateTaskException : Exception
+    {
+        public DuplicateTaskException(string task) : base($"Задача '{task}' уже существует.") { }
+    }
+    
+    public class TaskCountLimitException : Exception
+    {
+        public TaskCountLimitException(int taskCountLimit) 
+            : base($"Превышено максимальное количество задач равное {taskCountLimit}.") { }
     }
 }
