@@ -6,9 +6,9 @@ namespace Homework;
 
 public class UpdateHandler : IUpdateHandler
 {
-    private static string versionText = "Версия программы: 02.16.01 " +
-                                        "\nДата создания: 18.11.2025 " +
-                                        "\nДата обновления: 09.12.2025";
+    private static string versionText = "Версия программы:  03.19.01 " +
+                                        "\nДата создания:   10.12.2025 " +
+                                        "\nДата обновления: 10.12.2025";
     private static string command;
     private static IReadOnlyList<ToDoItem> todoList = new List<ToDoItem>();
     private static ToDoService TaskService = new();
