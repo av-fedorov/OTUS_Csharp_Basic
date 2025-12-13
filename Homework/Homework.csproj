@@ -11,4 +11,8 @@
       <ProjectReference Include="..\Otus.ToDoList.ConsoleBot\Otus.ToDoList.ConsoleBot.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Core\Exceptions\" />
+    </ItemGroup>
+
 </Project>
