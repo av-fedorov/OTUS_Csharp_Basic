@@ -8,7 +8,7 @@ public interface IToDoRepository
     IReadOnlyList<ToDoItem> GetActiveByUserId(Guid userId);
 
     ToDoItem? Get(Guid id);
-
+    
     void Add(ToDoItem item);
 
     void Update(ToDoItem item);
@@ -19,5 +19,7 @@ public interface IToDoRepository
     bool ExistsByName(Guid userId, string name);
 
     //Возвращает количество активных задач у пользователя
-    int CountActive(Guid userId); 
+    int CountActive(Guid userId);
+    
+    IReadOnlyList<ToDoItem> Find(Guid userId, Func<ToDoItem, bool> predicate);
 }

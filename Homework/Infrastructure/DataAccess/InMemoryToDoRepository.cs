@@ -2,7 +2,9 @@ namespace Homework;
 
 public class InMemoryToDoRepository : IToDoRepository
 {
-    private static List<ToDoItem> todoList = new();
+    
+    private readonly List<ToDoItem> todoList = [];
+    // private static List<ToDoItem> todoList = new();
     
     public IReadOnlyList<ToDoItem> GetAllByUserId(Guid userId)
     {
@@ -43,7 +45,7 @@ public class InMemoryToDoRepository : IToDoRepository
     
     public int CountActive(Guid userId)
     {
-        return todoList.Count(item => item.User.UserId == userId && item.State == ToDoItem.ToDoItemState.Active);
+        return GetActiveByUserId(userId).Count;
     }
     
     public int CountAll(Guid userId)
