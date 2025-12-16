@@ -2,16 +2,16 @@ namespace Homework;
 
 public class ToDoReportService : IToDoReportService
 {
-    ToDoService ToDoService = new ToDoService();
+    ToDoService toDoService = new();
     
     public (int total, int completed, int active, DateTime generatedAt) GetUserStats(Guid userId)
     {
-        var todoList = ToDoService.GetAllByUserId(userId);
+        var itemsList = toDoService.GetAllByUserId(userId);
             
         return (
-            todoList.Count(), 
-            todoList.Count(item => item.State == ToDoItem.ToDoItemState.Completed),
-            todoList.Count(item => item.State == ToDoItem.ToDoItemState.Active),
+            itemsList.Count(), 
+            itemsList.Count(item => item.State == ToDoItem.ToDoItemState.Completed),
+            itemsList.Count(item => item.State == ToDoItem.ToDoItemState.Active),
             DateTime.Now);
     }
 }

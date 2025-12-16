@@ -50,7 +50,7 @@ public class InMemoryToDoRepository : IToDoRepository
     
     public int CountAll(Guid userId)
     {
-        return todoList.Count(item => item.User.UserId == userId);
+        return GetAllByUserId(userId).Count;
     }
 
     public IReadOnlyList<ToDoItem> Find(Guid userId, Func<ToDoItem, bool> predicate)
