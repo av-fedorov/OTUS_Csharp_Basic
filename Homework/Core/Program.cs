@@ -6,7 +6,6 @@ namespace Homework;
 
 class Program
 {
-    // Домашнее задание №16: Интерфейсы
     static void Main()
     {
         try
