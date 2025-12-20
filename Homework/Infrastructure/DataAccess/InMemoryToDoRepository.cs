@@ -2,10 +2,7 @@ namespace Homework;
 
 public class InMemoryToDoRepository : IToDoRepository
 {
-    
-    private readonly List<ToDoItem> todoList = [];
-    // private static List<ToDoItem> todoList = new();
-    
+    private static List<ToDoItem> todoList = new();
     public IReadOnlyList<ToDoItem> GetAllByUserId(Guid userId)
     {
         return todoList.FindAll(item => item.User.UserId == userId);
