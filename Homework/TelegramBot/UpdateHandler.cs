@@ -6,14 +6,15 @@ namespace Homework;
 
 public class UpdateHandler : IUpdateHandler
 {
-    private static string versionText = "Версия программы: 02.16.01 " +
-                                        "\nДата создания: 18.11.2025 " +
-                                        "\nДата обновления: 09.12.2025";
-    private static string command;
-    private static IReadOnlyList<ToDoItem> todoList = new List<ToDoItem>();
-    private static ToDoService TaskService = new();
-    private static UserService UserService = new();
+    private readonly string command;
     private static ToDoUser CurrentUser = null;
+    private static IReadOnlyList<ToDoItem> todoList = new List<ToDoItem>();
+    private readonly ToDoService TaskService = new();
+    private readonly UserService UserService = new();
+    private readonly ToDoReportService ReportService = new();
+    private readonly string versionText = "Версия программы:    03.19.02 " +
+                                        "\nДата создания:       10.12.2025 " +
+                                        "\nДата обновления:     16.12.2025";
 
     public void HandleUpdateAsync(ITelegramBotClient botClient, Update update)
     {
@@ -27,8 +28,9 @@ public class UpdateHandler : IUpdateHandler
         {
             botClient.SendMessage(update.Message.Chat, "Список доступных команд:");
             botClient.SendMessage(update.Message.Chat, " /start \n /help \n /info \n " +
-                                                       "/addtask \n /showtasks \n /showalltasks \n " +
-                                                       "/completetask /removetask /exit\n");
+                                                       "/addtask \n /showtasks \n /showalltasks /find \n " +
+                                                       "/completetask /removetask /report \n" +
+                                                       "/exit\n");
 
             botClient.SendMessage(update.Message.Chat, $"Вы ввели: '{update.Message.Text}'\n");
 
@@ -58,6 +60,12 @@ public class UpdateHandler : IUpdateHandler
                 case string cmd when cmd == "/showalltasks" && CanRunCmd():
                     ShowTasks();
                     break;
+                case string cmd when cmd == "/report" && CanRunCmd():
+                    ShowReport();
+                    break;
+                case string cmd when cmd.StartsWith("/find") && CanRunCmd():
+                    FindTask();
+                    break;
             }
         }
 
@@ -69,8 +77,7 @@ public class UpdateHandler : IUpdateHandler
             
             if (CurrentUser is null)
                 CurrentUser = UserService.RegisterUser(update.Message.From.Id, update.Message.From.Username);
-                
-            // CurrentUser = new UserService().RegisterUser(update.Message.From.Id, update.Message.From.Username);
+            
             botClient.SendMessage(update.Message.Chat, $"Здравствуйте {CurrentUser.TelegramUserName}.");
 
             botClient.SendMessage(update.Message.Chat,
@@ -101,11 +108,12 @@ public class UpdateHandler : IUpdateHandler
             botClient.SendMessage(update.Message.Chat, " /help           - вывод описания по доступным командам.");
             botClient.SendMessage(update.Message.Chat, " /info           - техническая информация о программе.");
             botClient.SendMessage(update.Message.Chat, " /showtasks      - отобразить все задачи из списка дел.");
-            botClient.SendMessage(update.Message.Chat,
-                " /showalltasks   - отобразить задачи только в статусе 'Active'.");
+            botClient.SendMessage(update.Message.Chat, " /showalltasks   - отобразить задачи только в статусе 'Active'.");
             botClient.SendMessage(update.Message.Chat, " /addtask текст  - добавить задачу в список дел.");
             botClient.SendMessage(update.Message.Chat, " /completetask № - завершить выбранную задачу.");
-            botClient.SendMessage(update.Message.Chat, " /removetask № - удалить выбранную задачу.");
+            botClient.SendMessage(update.Message.Chat, " /removetask №   - удалить выбранную задачу.");
+            botClient.SendMessage(update.Message.Chat, " /find текст     - найти задачи, текст которых начинается с указанного выражения.");
+            botClient.SendMessage(update.Message.Chat, " /report         - отобразить сводный отчет по задачам.");
             botClient.SendMessage(update.Message.Chat, " /exit           - выход из программы.");
         }
 
@@ -140,7 +148,6 @@ public class UpdateHandler : IUpdateHandler
         void AddTask()
         {
             var taskText = update.Message.Text.Substring("/addtask".Length).Trim();
-            
             ValidateString(taskText);
             
             if (!string.IsNullOrWhiteSpace(taskText))
@@ -188,6 +195,41 @@ public class UpdateHandler : IUpdateHandler
                 else
                     botClient.SendMessage(update.Message.Chat, $"Задача №{taskNumber} отсутствует в списке.");
             }
+        }
+
+        ///////////////////////
+        // Поиск задачи по предикату. Предикат указывается после команды.
+        void FindTask()
+        {
+            var namePrefix = update.Message.Text.Substring("/find".Length).Trim();
+            ValidateString(namePrefix);
+            
+            todoList = TaskService.Find(CurrentUser, namePrefix);
+            
+            // TODO: объединить вывод задач из этого метода и ShowTasks() в отдельный общий метод.
+            if (todoList.Count == 0)
+                botClient.SendMessage(update.Message.Chat, 
+                    "Отсутствуют задачи соответствующие критериям поиска");
+            else
+            {
+                for (int i = 0; i < todoList.Count; i++)
+                {
+                    botClient.SendMessage(update.Message.Chat,
+                        $"#{i + 1}. {todoList[i].CreatedAt} [{todoList[i].Id}] " +
+                        $"\nCтатус: [{todoList[i].State}], изменен: {todoList[i].StateChangedAt}" +
+                        $"\nТекст: {todoList[i].Name}\n");
+                }
+            }
+        }
+        
+        ///////////////////////
+        // Отображение сводного отчета о задачах.
+        void ShowReport()
+        {
+            var report = ReportService.GetUserStats(CurrentUser.UserId);
+            botClient.SendMessage(update.Message.Chat,
+                $"Статистика по задачам на {report.generatedAt}. " +
+                $"Всего: {report.total}; Завершенных: {report.completed}; Активных: {report.active}.");
         }
 
         ///////////////////////

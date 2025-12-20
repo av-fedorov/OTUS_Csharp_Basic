@@ -2,44 +2,57 @@ namespace Homework;
 
 public class ToDoService : IToDoService
 {
-    private static List<ToDoItem> todoList = new();
+    InMemoryToDoRepository ToDoRepository = new();
     public int TaskCountLimit { get; set; }
     public int TaskLengthLimit { get; set; }
     
     public IReadOnlyList<ToDoItem> GetAllByUserId(Guid userId)
     {
-        return todoList.FindAll(item => item.User.UserId == userId);
+        return ToDoRepository.GetAllByUserId(userId);
     }
 
     public IReadOnlyList<ToDoItem> GetActiveByUserId(Guid userId)
     {
-        return todoList.FindAll(item => item.User.UserId == userId && item.State == ToDoItem.ToDoItemState.Active);
+        return ToDoRepository.GetActiveByUserId(userId);
     }
 
     public ToDoItem Add(ToDoUser user, string name)
     {
-        if (todoList.Count >= TaskCountLimit)
+        if (ToDoRepository.CountAll(user.UserId) >= TaskCountLimit)
             throw new ArgumentException($"Превышено максимальное количество задач ({TaskCountLimit} шт).");
+        
+        if (ToDoRepository.ExistsByName(user.UserId, name))
+            throw new ArgumentException($"Задача с указанным текстом ('{name}') уже существует в списке.");
+        
         if (name.Length > TaskLengthLimit && TaskLengthLimit > 0) 
             throw new ArgumentException($"Длина задачи ({name.Length}) " +
                                         $"превышает максимально допустимое значение ({TaskLengthLimit}).");
-        if (todoList.Any(item => item.Name == name))
-            throw new ArgumentException($"Задача с указанным текстом ('{name}') уже существует в списке.");
+        
         
         var newItem = new ToDoItem(user, name);
-        todoList.Add(newItem);
+        ToDoRepository.Add(newItem);
 
         return newItem;
     }
 
     public void MarkCompleted(Guid id)
     {
-        todoList.Find(item => item.Id == id).State = ToDoItem.ToDoItemState.Completed;
-        todoList.Find(item => item.Id == id).StateChangedAt = DateTime.Now;
+        var item = ToDoRepository.Get(id);
+        
+        if (item != null)
+        {
+            item.State = ToDoItem.ToDoItemState.Completed;
+            ToDoRepository.Update(item);
+        }
     }
 
     public void Delete(Guid id)
     {
-        todoList.Remove(todoList.Find(item => item.Id == id));
+        ToDoRepository.Delete(id);
+    }
+
+    public IReadOnlyList<ToDoItem> Find(ToDoUser user, string namePrefix)
+    {
+        return ToDoRepository.Find(user.UserId, item => item.Name.StartsWith(namePrefix));
     }
 }
