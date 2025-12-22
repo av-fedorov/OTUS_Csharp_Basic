@@ -15,8 +15,7 @@ public interface IToDoRepository
     Task Delete(Guid id, CancellationToken ct);
     
     Task<bool> ExistsByName(Guid userId, string name, CancellationToken ct);
-
-    //Возвращает количество активных задач у пользователя
+    
     Task<int> CountActive(Guid userId, CancellationToken ct);
     
     Task<IReadOnlyList<ToDoItem>> Find(Guid userId, Func<ToDoItem, bool> predicate, CancellationToken ct);

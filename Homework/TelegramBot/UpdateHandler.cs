@@ -7,59 +7,64 @@ namespace Homework;
 public class UpdateHandler : IUpdateHandler
 {
     
-    // private delegate void MessageEventHandler(string message);
-    // private event MessageEventHandler OnHandleUpdateStarted;
-    // private event MessageEventHandler OnHandleUpdateCompleted;
-    
-    private readonly string command;
-    private static ToDoUser CurrentUser;
+   
+    private static string command;
+    private static ToDoUser currentUser;
     private static IReadOnlyList<ToDoItem> todoList = new List<ToDoItem>();
-    private readonly ToDoService TaskService = new();
-    private readonly UserService UserService = new();
-    // private readonly ToDoReportService ReportService = new();
-    private readonly string versionText = "Версия программы:    03.19.02 " +
-                                        "\nДата создания:       10.12.2025 " +
-                                        "\nДата обновления:     16.12.2025";
+    private readonly ToDoService taskService = new();
+    private readonly UserService userService = new();
+    private readonly ToDoReportService reportService = new();
+    private readonly string versionText = "Версия программы:    03.19.03 " +
+                                        "\nДата создания:       20.12.2025 " +
+                                        "\nДата обновления:     22.12.2025";
+    
+    private delegate void MessageEventHandler(string message);
+    private event MessageEventHandler OnHandleUpdateStarted;
+    private event MessageEventHandler OnHandleUpdateCompleted;
     
     
     
     public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken ct)
     {
-        // OnHandleUpdateStarted += DisplayMessage;
-        // OnHandleUpdateCompleted += DisplayMessage;
+        OnHandleUpdateStarted += DisplayMessage;
+        OnHandleUpdateCompleted += DisplayMessage;
         
         try
         {
-            // OnHandleUpdateStarted?.Invoke($"Началась обработка сообщения '{update.Message.Text}'.");
-            RunApp();
-            // OnHandleUpdateCompleted?.Invoke($"Закончилась обработка сообщения '{update.Message.Text}'.");
+            OnHandleUpdateStarted?.Invoke($"Началась обработка сообщения '{update.Message.Text}'.");
+            await RunApp();
+            OnHandleUpdateCompleted?.Invoke($"Закончилась обработка сообщения '{update.Message.Text}'.");
         }
+        
         catch (ArgumentException e)
         {
-            botClient.SendMessage(update.Message.Chat, e.Message, ct);
+            await botClient.SendMessage(update.Message.Chat, e.Message, ct);
         }
+        
         catch (Exception e)
         {
-            botClient.SendMessage(update.Message.Chat, e.Message, ct);
+            await botClient.SendMessage(update.Message.Chat, e.Message, ct);
         }
+        
         finally
         {
-            // OnHandleUpdateStarted -= DisplayMessage;
-            // OnHandleUpdateCompleted -= DisplayMessage;
+            OnHandleUpdateStarted -= DisplayMessage;
+            OnHandleUpdateCompleted -= DisplayMessage;
         }
 
-        void RunApp()
+        async Task RunApp()
         {
-             botClient.SendMessage(update.Message.Chat, "Список доступных команд:", ct);
-             botClient.SendMessage(update.Message.Chat, " /start \n /help \n /info \n " +
-                                                       "/addtask \n /showtasks \n /showalltasks /find \n " +
-                                                       "/completetask /removetask /report \n" +
-                                                       "/exit\n", ct);
-
-            botClient.SendMessage(update.Message.Chat, $"Вы ввели: '{update.Message.Text}'\n", ct);
-            // await botClient.SendMessage(update.Message.Chat, $"Получил '{update.Message.Text}'", ct);
+            command = update.Message.Text;
             
-            switch (update.Message.Text)
+            // botClient.SendMessage(update.Message.Chat, "Список доступных команд:", ct);
+            // botClient.SendMessage(update.Message.Chat, " /start \n /help \n /info \n " +
+            //                                        "/addtask \n /showtasks \n /showalltasks /find \n " +
+            //                                        "/completetask /removetask /report \n" +
+            //                                        "/exit\n", ct);
+
+            await botClient.SendMessage(update.Message.Chat, $"Бот получил '{update.Message.Text}'", ct);
+            
+            switch (command)
             {
                 case "/start":
                     StartApp();
@@ -71,7 +76,7 @@ public class UpdateHandler : IUpdateHandler
                     ShowInfo();
                     break;
                 case string cmd when cmd.StartsWith("/addtask") && CanRunCmd():
-                    AddTask();
+                    await AddTask();
                     break;
                 case string cmd when cmd.StartsWith("/completetask") && CanRunCmd():
                     CompleteTask();
@@ -85,9 +90,9 @@ public class UpdateHandler : IUpdateHandler
                 case string cmd when cmd == "/showalltasks" && CanRunCmd():
                     ShowTasks();
                     break;
-                // case string cmd when cmd == "/report" && CanRunCmd():
-                //     // ShowReport();
-                //     break;
+                case string cmd when cmd == "/report" && CanRunCmd():
+                    ShowReport();
+                    break;
                 case string cmd when cmd.StartsWith("/find") && CanRunCmd():
                     FindTask();
                     break;
@@ -98,28 +103,34 @@ public class UpdateHandler : IUpdateHandler
         // Команда запуска/инициализации приложения
         void StartApp()
         {
-            CurrentUser = UserService.GetUser(update.Message.From.Id, ct).Result;
+      currentUser = userService.GetUser(update.Message.From.Id, ct).Result;
             
-            if (CurrentUser is null)
-                CurrentUser = UserService.RegisterUser(update.Message.From.Id, update.Message.From.Username, ct).Result;
+            if (currentUser is null)
+                currentUser = userService.RegisterUser(update.Message.From.Id, update.Message.From.Username, ct).Result;
             
-            botClient.SendMessage(update.Message.Chat, $"Здравствуйте {CurrentUser.TelegramUserName}.", ct);
+            botClient.SendMessage(update.Message.Chat, 
+                $"Здравствуйте {currentUser.TelegramUserName}.", ct);
 
+            taskService.TaskLengthLimit = 3;
+            taskService.TaskCountLimit = 5;
+            
+            /*
+             TODO: доработать простановку количества задач.
+             
             botClient.SendMessage(update.Message.Chat,
                 "Введите максимально допустимое количество задач (от 1 до 100): ", ct);
-            var taskCountLimit = Console.ReadLine();
 
-            Console.WriteLine($"$taskCountLimit = {taskCountLimit}");
-            
-            TaskService.TaskCountLimit = ParseAndValidateInt(taskCountLimit, 1, 100);
-            Console.WriteLine($"ParseAndValidateInt: ${ParseAndValidateInt(taskCountLimit, 1, 100)}" );
-            
+            taskService.TaskCountLimit = ParseAndValidateInt(update.Message.Text, 1, 100);
+            // Console.WriteLine($"ParseAndValidateInt: ${ParseAndValidateInt(taskCountLimit, 1, 100)}" );
+
             botClient.SendMessage(update.Message.Chat,
                 "Введите максимально допустимую длину задачи: ", ct);
-            TaskService.TaskLengthLimit = ParseAndValidateInt(Console.ReadLine(), 1, 255);
-            
+            taskService.TaskLengthLimit = ParseAndValidateInt(Console.ReadLine(), 1, 255);
+
             botClient.SendMessage(update.Message.Chat,
                 "Параметры работы приложения заданы. Введите команду для продолжения работы.", ct);
+
+            */
         }
 
         ///////////////////////
@@ -153,9 +164,9 @@ public class UpdateHandler : IUpdateHandler
         bool ShowTasks(string mode = "all")
         {
             if (mode == "active")
-                todoList = TaskService.GetActiveByUserId(CurrentUser.UserId, ct).Result;
+                todoList = taskService.GetActiveByUserId(currentUser.UserId, ct).Result;
             else
-                todoList = TaskService.GetAllByUserId(CurrentUser.UserId, ct).Result;
+                todoList = taskService.GetAllByUserId(currentUser.UserId, ct).Result;
 
             if (todoList.Count == 0)
                 botClient.SendMessage(update.Message.Chat, "Список задач пуст.", ct);
@@ -175,14 +186,14 @@ public class UpdateHandler : IUpdateHandler
 
         ///////////////////////
         // Добавление задач в список. Текст задачи указывается после команды.
-        void AddTask()
+        async Task AddTask()
         {
             var taskText = update.Message.Text.Substring("/addtask".Length).Trim();
             ValidateString(taskText);
             
             if (!string.IsNullOrWhiteSpace(taskText))
             {
-                TaskService.Add(CurrentUser, taskText, ct);
+                await taskService.Add(currentUser, taskText, ct);
                 botClient.SendMessage(update.Message.Chat, "Задача добавлена.", ct);
             }
             else
@@ -195,12 +206,12 @@ public class UpdateHandler : IUpdateHandler
         {
             if (ShowTasks("active"))
             {
-                todoList = TaskService.GetActiveByUserId(CurrentUser.UserId, ct).Result;
+                todoList = taskService.GetActiveByUserId(currentUser.UserId, ct).Result;
                 int.TryParse(update.Message.Text.Substring("/completetask".Length).Trim(), out var taskNumber);
 
                 if (taskNumber > 0 && taskNumber <= todoList.Count)
                 {
-                    TaskService.MarkCompleted(todoList[taskNumber - 1].Id, ct);
+                    taskService.MarkCompleted(todoList[taskNumber - 1].Id, ct);
                     botClient.SendMessage(update.Message.Chat, $"Задача №{taskNumber} завершена.", ct);
                 }
                 else
@@ -214,12 +225,12 @@ public class UpdateHandler : IUpdateHandler
         {
             if (ShowTasks("active"))
             {
-                todoList = TaskService.GetActiveByUserId(CurrentUser.UserId, ct).Result;
+                todoList = taskService.GetActiveByUserId(currentUser.UserId, ct).Result;
                 int.TryParse(update.Message.Text.Substring("/removetask".Length).Trim(), out var taskNumber);
 
                 if (taskNumber > 0 && taskNumber <= todoList.Count)
                 {
-                    TaskService.Delete(todoList[taskNumber - 1].Id, ct);
+                    taskService.Delete(todoList[taskNumber - 1].Id, ct);
                     botClient.SendMessage(update.Message.Chat, $"Задача №{taskNumber} удалена.", ct);
                 }
                 else
@@ -234,7 +245,7 @@ public class UpdateHandler : IUpdateHandler
             var namePrefix = update.Message.Text.Substring("/find".Length).Trim();
             ValidateString(namePrefix);
             
-            todoList = TaskService.Find(CurrentUser, namePrefix, ct).Result;
+            todoList = taskService.Find(currentUser, namePrefix, ct).Result;
             
             // TODO: объединить вывод задач из этого метода и ShowTasks() в отдельный общий метод.
             if (todoList.Count == 0)
@@ -254,19 +265,19 @@ public class UpdateHandler : IUpdateHandler
         
         ///////////////////////
         // Отображение сводного отчета о задачах.
-        // void ShowReport()
-        // {
-        //     var report = ReportService.GetUserStats(CurrentUser.UserId);
-        //     botClient.SendMessage(update.Message.Chat,
-        //         $"Статистика по задачам на {report.generatedAt}. " +
-        //         $"Всего: {report.total}; Завершенных: {report.completed}; Активных: {report.active}.", ct);
-        // }
+        void ShowReport()
+        {
+            var report = reportService.GetUserStats(currentUser.UserId, ct);
+            botClient.SendMessage(update.Message.Chat,
+                $"Статистика по задачам на {report.Result.generatedAt}. Всего: {report.Result.total}; " +
+                $"Завершенных: {report.Result.completed}; Активных: {report.Result.active}.", ct);
+        }
 
         ///////////////////////
         // Проверка возможности запуска необходимой команды.
         bool CanRunCmd()
         {
-            if (CurrentUser != null)
+            if (currentUser != null)
                 return true;
             else
             {
@@ -280,8 +291,7 @@ public class UpdateHandler : IUpdateHandler
         
         int ParseAndValidateInt(string? str, int min, int max)
         {
-            int number;
-            int.TryParse(str, out number);
+            int.TryParse(str, out var number);
             
             if (number < min || number > max)
                 throw new ArgumentException($"Строка не является числом, либо выходит за пределы указанного диапазона от {min} до {max}.");

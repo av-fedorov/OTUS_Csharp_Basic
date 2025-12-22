@@ -27,7 +27,8 @@ public class InMemoryToDoRepository : IToDoRepository
     public async Task Update(ToDoItem item, CancellationToken ct)
     {
         var index = todoList.IndexOf(item);
-        if (index >= 0) todoList[index] = item;
+        if (index >= 0) 
+            todoList[index] = item;
     }
 
     public async Task Delete(Guid id, CancellationToken ct)
