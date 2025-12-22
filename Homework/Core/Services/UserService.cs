@@ -5,16 +5,16 @@ namespace Homework;
 public class UserService : IUserService
 {   
     InMemoryUserRepository UserRepository = new();
-    public ToDoUser RegisterUser(long telegramUserId, string telegramUserName)
+    public async Task<ToDoUser> RegisterUser(long telegramUserId, string telegramUserName,  CancellationToken ct)
     {
         var User = new ToDoUser(telegramUserName, telegramUserId);
-        UserRepository.Add(User);
+        await UserRepository.Add(User, ct);
         
         return User;
     }
 
-    public ToDoUser? GetUser(long telegramUserId)
+    public async Task<ToDoUser>? GetUser(long telegramUserId,  CancellationToken ct)
     {
-        return UserRepository.GetUserByTelegramUserId(telegramUserId);
+        return await UserRepository.GetUserByTelegramUserId(telegramUserId, ct);
     }
 }

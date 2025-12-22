@@ -1,5 +1,5 @@
-﻿using Otus.ToDoList.ConsoleBot;
-using Otus.ToDoList.ConsoleBot.Types;
+﻿using Otus.ToDoList.ConsoleBot.Types;
+using Otus.ToDoList.ConsoleBot;
 
 
 namespace Homework;
@@ -10,10 +10,11 @@ class Program
     {
         try
         {
+            using var cts = new CancellationTokenSource();
             var handler = new UpdateHandler();
             var botClient = new ConsoleBotClient();
-        
-            botClient.StartReceiving(handler);
+            
+            botClient.StartReceiving(handler, cts.Token);
         }
         catch (Exception e)
         {
