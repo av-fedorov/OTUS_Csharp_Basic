@@ -14,7 +14,7 @@ public class UpdateHandler : IUpdateHandler
     private readonly ToDoService taskService = new();
     private readonly UserService userService = new();
     private readonly ToDoReportService reportService = new();
-    private readonly string versionText = "Версия программы:    03.19.03 " +
+    private readonly string versionText = "Версия программы:    03.22.03 " +
                                         "\nДата создания:       20.12.2025 " +
                                         "\nДата обновления:     22.12.2025";
     
