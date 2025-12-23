@@ -1,6 +1,7 @@
 using System.Globalization;
-using Otus.ToDoList.ConsoleBot;
-using Otus.ToDoList.ConsoleBot.Types;
+using Telegram.Bot;
+using Telegram.Bot.Polling;
+using Telegram.Bot.Types;
 
 namespace Homework;
 
@@ -19,8 +20,6 @@ public class UpdateHandler : IUpdateHandler
     private delegate void MessageEventHandler(string message);
     private event MessageEventHandler OnHandleUpdateStarted;
     private event MessageEventHandler OnHandleUpdateCompleted;
-    
-    
     
     public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken ct)
     {
@@ -304,7 +303,8 @@ public class UpdateHandler : IUpdateHandler
         }
     }
 
-    public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken ct)
+    public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source,
+        CancellationToken cancellationToken)
     {
         Console.WriteLine($"HandleError: {exception})");
         return Task.CompletedTask;
