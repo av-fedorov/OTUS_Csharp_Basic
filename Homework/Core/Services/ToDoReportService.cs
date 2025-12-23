@@ -4,9 +4,9 @@ public class ToDoReportService : IToDoReportService
 {
     ToDoService toDoService = new();
     
-    public (int total, int completed, int active, DateTime generatedAt) GetUserStats(Guid userId)
+    public async Task<(int total, int completed, int active, DateTime generatedAt)> GetUserStats(Guid userId, CancellationToken ct)
     {
-        var itemsList = toDoService.GetAllByUserId(userId);
+        var itemsList = await toDoService.GetAllByUserId(userId, ct);
             
         return (
             itemsList.Count(), 

@@ -2,57 +2,56 @@ namespace Homework;
 
 public class ToDoService : IToDoService
 {
-    InMemoryToDoRepository ToDoRepository = new();
+    InMemoryToDoRepository toDoRepository = new();
     public int TaskCountLimit { get; set; }
     public int TaskLengthLimit { get; set; }
     
-    public IReadOnlyList<ToDoItem> GetAllByUserId(Guid userId)
+    public async Task<IReadOnlyList<ToDoItem>> GetAllByUserId(Guid userId, CancellationToken ct)
     {
-        return ToDoRepository.GetAllByUserId(userId);
+        return await toDoRepository.GetAllByUserId(userId, ct);
     }
 
-    public IReadOnlyList<ToDoItem> GetActiveByUserId(Guid userId)
+    public async Task<IReadOnlyList<ToDoItem>> GetActiveByUserId(Guid userId, CancellationToken ct)
     {
-        return ToDoRepository.GetActiveByUserId(userId);
+        return await toDoRepository.GetActiveByUserId(userId, ct);
     }
 
-    public ToDoItem Add(ToDoUser user, string name)
+    public async Task<ToDoItem> Add(ToDoUser user, string name, CancellationToken ct)
     {
-        if (ToDoRepository.CountAll(user.UserId) >= TaskCountLimit)
+        if (await toDoRepository.CountAll(user.UserId, ct) >= TaskCountLimit)
             throw new ArgumentException($"Превышено максимальное количество задач ({TaskCountLimit} шт).");
         
-        if (ToDoRepository.ExistsByName(user.UserId, name))
+        if (await toDoRepository.ExistsByName(user.UserId, name, ct))
             throw new ArgumentException($"Задача с указанным текстом ('{name}') уже существует в списке.");
         
         if (name.Length > TaskLengthLimit && TaskLengthLimit > 0) 
             throw new ArgumentException($"Длина задачи ({name.Length}) " +
                                         $"превышает максимально допустимое значение ({TaskLengthLimit}).");
         
-        
         var newItem = new ToDoItem(user, name);
-        ToDoRepository.Add(newItem);
+        await toDoRepository.Add(newItem, ct);
 
         return newItem;
     }
 
-    public void MarkCompleted(Guid id)
+    public async Task MarkCompleted(Guid id, CancellationToken ct)
     {
-        var item = ToDoRepository.Get(id);
+        var item = toDoRepository.Get(id,  ct);
         
         if (item != null)
         {
-            item.State = ToDoItem.ToDoItemState.Completed;
-            ToDoRepository.Update(item);
+            item.Result.State = ToDoItem.ToDoItemState.Completed;
+            await toDoRepository.Update(item.Result, ct);
         }
     }
 
-    public void Delete(Guid id)
+    public async Task Delete(Guid id, CancellationToken ct)
     {
-        ToDoRepository.Delete(id);
+        await toDoRepository.Delete(id,  ct);
     }
-
-    public IReadOnlyList<ToDoItem> Find(ToDoUser user, string namePrefix)
+    
+    public async Task<IReadOnlyList<ToDoItem>> Find(ToDoUser user, string namePrefix, CancellationToken ct)
     {
-        return ToDoRepository.Find(user.UserId, item => item.Name.StartsWith(namePrefix));
+        return await toDoRepository.Find(user.UserId, item => item.Name.StartsWith(namePrefix), ct);
     }
 }
