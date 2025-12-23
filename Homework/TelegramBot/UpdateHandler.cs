@@ -6,15 +6,13 @@ namespace Homework;
 
 public class UpdateHandler : IUpdateHandler
 {
-    
-   
     private static string command;
     private static ToDoUser currentUser;
     private static IReadOnlyList<ToDoItem> todoList = new List<ToDoItem>();
     private readonly ToDoService taskService = new();
     private readonly UserService userService = new();
     private readonly ToDoReportService reportService = new();
-    private readonly string versionText = "Версия программы:    03.22.03 " +
+    private readonly string versionText = "Версия программы:    03.22.04 " +
                                         "\nДата создания:       20.12.2025 " +
                                         "\nДата обновления:     22.12.2025";
     
